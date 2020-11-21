@@ -1,5 +1,6 @@
-var items
-const getItem = () => {
+var items;
+
+(function getItem() {
 
   Promise.all(
     Array.from(
@@ -14,21 +15,96 @@ const getItem = () => {
   ).then(_items => {
     var myItems = getMyGallery();
     items = _items.filter(d => d.primaryImage)
-      .map(d => ({
-        ...d,
-        isSelected: myItems.includes(d.objectID)
-      }))
+      .map(d => {
+        d.isSelected = myItems.includes(d.objectID)
+        return d
+      })
     items.map(d => renderItem(d))
   })
+}())
+
+function renderItem(item) {
+  var img = document.createElement('img');
+  img.src = item.primaryImage;
+  img.style.minHeight = "200px";
+  var li = document.createElement('li');
+
+  var h3 = document.createElement('h3');
+  h3.innerHTML = item.title
+
+  var p = document.createElement('p');
+  p.innerHTML = item.artistDisplayName || "Anonymous";
+
+  var a = document.createElement('a')
+  a.href = item.objectURL;
+  a.target = "_blank";
+
+  var i = document.createElement('i')
+  i.classList.add("far", "fa-star")
+  i.onclick = () => {
+    item.isSelected = !item.isSelected;
+    if (item.isSelected) {
+
+      var myItems = getMyGallery();
+      myItems.push(item.objectID);
+
+      if (updateMyGallery(myItems)) {
+        i.classList.remove("far")
+        i.classList.add("fas")
+        li.classList.add('selected');
+      }
+    } else {
+      var myItems = getMyGallery();
+      myItems = myItems.filter(d => item.objectID != d);
+
+      if (updateMyGallery(myItems)) {
+        i.classList.remove("fas")
+        i.classList.add("far");
+        li.classList.remove('selected');
+      };
+    }
+
+  }
+  if (item.isSelected) {
+    i.classList.add("fas", "fa-star");
+    li.classList.add('selected');
+  }
+
+  a.appendChild(img);
+  a.appendChild(h3);
+  a.appendChild(p);
+  li.appendChild(a);
+  li.appendChild(i);
+  document.querySelector('.gallery').appendChild(li);
+
+}
+
+//Actions to be called from HTML
+
+showGallery = () => {
+  const navGallery = document.getElementById("navGallery");
+  navGallery.classList.add("active")
+
+  const navMyGallery = document.getElementById("navMyGallery");
+  navMyGallery.classList.remove("active")
+
+  document.querySelector('.gallery').classList.add('allGallery');
+  document.querySelector('.gallery').classList.remove('myGallery');
+}
+
+showMyGallery = () => {
+  const navMyGallery = document.getElementById("navMyGallery");
+  navMyGallery.classList.add("active")
+
+  const navGallery = document.getElementById("navGallery");
+  navGallery.classList.remove("active");
+
+  document.querySelector('.gallery').classList.add('myGallery');
+  document.querySelector('.gallery').classList.remove('allGallery');
 }
 
 
-
-
-
-getItem()
-
-//helper function
+//helper functions
 
 function getMyGallery() {
   var myItems = localStorage.getItem("myItems");
@@ -49,113 +125,5 @@ function updateMyGallery(myItems) {
   }
   localStorage.setItem("myItems", JSON.stringify(myItems))
   return true;
-
-}
-
-const renderItem = (item) => {
-  var img = document.createElement('img');
-  img.src = item.primaryImage;
-  img.style.minHeight = "200px";
-  var li = document.createElement('li');
-
-
-
-  var h3 = document.createElement('h3');
-  h3.innerHTML = item.title
-
-  var p = document.createElement('p');
-  p.innerHTML = item.artistDisplayName || "Anonymous";
-
-  var a = document.createElement('a')
-  a.href = item.objectURL;
-  a.target = "_blank";
-  // a.innerHTML = "OPEN"
-
-  var i = document.createElement('i')
-  i.classList.add("far", "fa-star")
-  i.onclick = () => {
-    item.isSelected = !item.isSelected;
-    if (item.isSelected) {
-
-      var myItems = getMyGallery();
-      myItems.push(item.objectID);
-
-      if (updateMyGallery(myItems)) {
-        i.classList.remove("far")
-        i.classList.add("fas")
-        li.classList.add('selected');
-      }
-
-
-    } else {
-
-      var myItems = getMyGallery();
-      myItems = myItems.filter(d => item.objectID != d);
-
-      if (updateMyGallery(myItems)) {
-        i.classList.remove("fas")
-        i.classList.add("far");
-        li.classList.remove('selected');
-
-      };
-
-
-    }
-
-  }
-  if (item.isSelected) {
-    i.classList.add("fas", "fa-star");
-    li.classList.add('selected');
-  }
-
-  a.appendChild(img);
-  a.appendChild(h3);
-  a.appendChild(p);
-  li.appendChild(a);
-  li.appendChild(i);
-
-  document.querySelector('.gallery').appendChild(li);
-
-}
-
-const clearGallery = () => {
-  document.querySelector('.gallery').innerHTML = '';
-}
-
-showGallery = () => {
-  const navGallery = document.getElementById("navGallery");
-  navGallery.classList.add("active")
-
-  const navMyGallery = document.getElementById("navMyGallery");
-  navMyGallery.classList.remove("active")
-
-  document.querySelector('.gallery').classList.add('allGallery'); 
-  document.querySelector('.gallery').classList.remove('myGallery'); 
-
-
-//   clearGallery();
-//   items.filter(d => d.isSelected).map(d => renderItem(d))
-}
-
-showMyGallery = () => {
-  const navMyGallery = document.getElementById("navMyGallery");
-  navMyGallery.classList.add("active")
-
-  const navGallery = document.getElementById("navGallery");
-  navGallery.classList.remove("active");
-
-  document.querySelector('.gallery').classList.add('myGallery'); 
-  document.querySelector('.gallery').classList.remove('allGallery'); 
-//   clearGallery();
-//   let myItems = [...items]
-//   myItems = myItems.filter(d => d.isSelected)
-
-//   if(myItems.length > 0){
-//     document.getElementById('no_items').style.display = "none";
-//     myItems.map(d => renderItem(d));
-//   } else {
-//     document.getElementById('no_items').style.display = "block";
-//     document.querySelector('.gallery').appendChild(p); 
-//   }
 
 }
